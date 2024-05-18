@@ -6,6 +6,7 @@ import signal
 import sys
 import time
 from multiprocessing import SimpleQueue
+from os import getenv
 from threading import Event, Thread
 from typing import Dict, List
 
@@ -29,6 +30,9 @@ _FIFO_LIST: List[str] = []
 # notification to the process that was started for it and the configuration.
 # Note: _NOTIFICATION_MAP should only contain notifications with a callback!
 _NOTIFICATION_MAP: Dict[str, NotificationConfig] = {}
+# Set MACOS_NOTIFICATIONS_SKIP_SIGNAL_HANDLING=True to avoid registered this package as the default handler
+# for SIGINT.
+SKIP_SIGNAL_HANDLING = getenv('MACOS_NOTIFICATIONS_SKIP_SIGNAL_HANDLING', False)
 logger = logging.getLogger()
 
 
@@ -57,6 +61,9 @@ class NotificationManager(metaclass=Singleton):
         atexit.register(self.cleanup)
 
         # Specify that when we get a keyboard interrupt, this function should handle it
+        if not SKIP_SIGNAL_HANDLING:
+            return
+
         self.original_sigint_handler = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, handler=self.catch_keyboard_interrupt)
 
@@ -109,8 +116,9 @@ class NotificationManager(metaclass=Singleton):
     def catch_keyboard_interrupt(self, *args, **kwargs) -> None:
         """We catch the keyboard interrupt but also pass it onto the user program."""
         self.cleanup()
-        # Call the original SIGINT handler.
-        self.original_sigint_handler(*args, **kwargs)
+        # Restore the original SIGINT handler and raise signal
+        signal.signal(signal.SIGINT, handler=self.original_sigint_handler)
+        signal.raise_signal(signal.SIGINT)
 
     def cleanup(self) -> None:
         """Stop all processes related to the Notification callback handling."""

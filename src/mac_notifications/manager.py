@@ -61,7 +61,7 @@ class NotificationManager(metaclass=Singleton):
         atexit.register(self.cleanup)
 
         # Specify that when we get a keyboard interrupt, this function should handle it
-        if not SKIP_SIGNAL_HANDLING:
+        if SKIP_SIGNAL_HANDLING:
             return
 
         self.original_sigint_handler = signal.getsignal(signal.SIGINT)

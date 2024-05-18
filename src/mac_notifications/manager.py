@@ -106,12 +106,11 @@ class NotificationManager(metaclass=Singleton):
         """
         return len(_NOTIFICATION_MAP)
 
-    def catch_keyboard_interrupt(self, *args) -> None:
+    def catch_keyboard_interrupt(self, *args, **kwargs) -> None:
         """We catch the keyboard interrupt but also pass it onto the user program."""
         self.cleanup()
-        # Restore the original SIGINT handler before re-raising.
-        signal.signal(signal.SIGINT, self.original_sigint_handler)
-        signal.raise_signal(signal.SIGINT)
+        # Call the original SIGINT handler.
+        self.original_sigint_handler(*args, **kwargs)
 
     def cleanup(self) -> None:
         """Stop all processes related to the Notification callback handling."""

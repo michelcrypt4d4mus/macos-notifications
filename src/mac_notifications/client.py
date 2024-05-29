@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from multiprocessing import SimpleQueue
 from pathlib import Path
 from typing import Callable
 
@@ -16,9 +17,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 
-def get_notification_manager() -> NotificationManager:
+def get_notification_manager(callback_queue: SimpleQueue | None = None) -> NotificationManager:
     """Return the NotificationManager object."""
-    return NotificationManager()
+    return NotificationManager(callback_queue)
 
 
 def stop_listening_for_callbacks() -> None:
@@ -37,6 +38,7 @@ def create_notification(
     reply_button_str: str | None = None,
     reply_callback: Callable[[str], None] | None = None,
     snooze_button_str: str | None = None,
+    callback_queue: SimpleQueue | None = None,
 ) -> Notification :
     """
     Create a MacOS notification :)
@@ -65,4 +67,4 @@ def create_notification(
         reply_callback=reply_callback,
         snooze_button_str=snooze_button_str,
     )
-    return get_notification_manager().create_notification(notification_config)
+    return get_notification_manager(callback_queue).create_notification(notification_config)

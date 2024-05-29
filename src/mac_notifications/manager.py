@@ -5,6 +5,7 @@ import logging
 import signal
 import sys
 import time
+import multiprocessing
 from multiprocessing import SimpleQueue
 from os import getenv
 from threading import Event, Thread
@@ -51,8 +52,8 @@ class NotificationManager(metaclass=Singleton):
     - Starting the Callback Executor thread in the background.
     """
 
-    def __init__(self):
-        self._callback_queue: SimpleQueue | None = None
+    def __init__(self, callback_queue: SimpleQueue | None = None):
+        self._callback_queue = callback_queue
         self._callback_executor_event: Event = Event()
         self._callback_executor_thread: CallbackExecutorThread | None = None
         # Specify that once we stop our application, self.cleanup should run
